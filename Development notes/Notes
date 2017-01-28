@@ -1,0 +1,8 @@
+TO DO
+
+Break apart the query_dictionary into its own function that can also return the list of queries.
+This could also be a variable in a future class
+
+Error check the affine_2/3d functions for numbers/types of inputs
+
+Need to import the section_number and section_thickness out of affine_3D. Include these in the dictionary output.
