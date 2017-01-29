@@ -86,10 +86,9 @@ ax = fig.add_subplot(1,1,1)
 ax.imshow(img)
 plt.show()
 
+```
 ![](https://github.com/efferencecopy/ecallen/blob/master/resources/example_brain_img.png "example brain image")
 
-
-```
 
 **[Back to top](#table-of-contents)**
 
