@@ -1,6 +1,5 @@
 """
-
-The ecallen.images module handles interactions with Allen API
+The ecallen.images module handles interactions with Allen API.
 
 Copyright (C) 2017 Charlie Hass charlie@efferencecopy.net
 
@@ -29,8 +28,9 @@ import io
 
 
 def send_query(query_string) -> dict:
-
     """
+    Send a query to the Allen API.
+
     send_query(query_string)
 
     Args:
@@ -44,7 +44,6 @@ def send_query(query_string) -> dict:
             contains the results of the query
 
     """
-
     # send the query, package the return argument as a json tree
     response = requests.get(query_string)
     if response.ok:
@@ -62,6 +61,8 @@ def send_query(query_string) -> dict:
 
 def query_string_builder(query_type, **kwargs) -> str:
     """
+    Build an API query string.
+
     query_string_builder(query_type, kwargs)
 
     Constructs a string that can be used as an API query for the
@@ -87,9 +88,7 @@ def query_string_builder(query_type, **kwargs) -> str:
     Returns:
         query_string : string
             Can be used as an API request
-
     """
-
     # TODO: convert this constrcut to a dictionary, or build class "query_type"
     if query_type.lower() == "section_dataset_info":
         query_string = '/data/query.json?criteria=model::SectionDataSet,rma::criteria,[id$eq{}],' \
@@ -122,6 +121,8 @@ def query_string_builder(query_type, **kwargs) -> str:
 
 def get_imaging_params(data_set_id) -> dict:
     """
+    Retrieve metadata for a section_dataset.
+
     get_imaging_params(data_set_id)
 
     retrieve a dictionary of image metadata for a single experiment
@@ -134,7 +135,6 @@ def get_imaging_params(data_set_id) -> dict:
         dictionary of parameters and values
 
     """
-
     # send the request
     query_string = query_string_builder("section_dataset_info", section_data_set_id=data_set_id)
     json = send_query(query_string)
@@ -155,6 +155,8 @@ def get_imaging_params(data_set_id) -> dict:
 
 def get_affine_3d(data_set_id) -> dict:
     """
+    Get the coefficients for 3D affine transformation.
+
     get_affine_3d(data_set_id)
 
     Query the Allen API to obtain the values for the TVR transform. This
@@ -172,7 +174,6 @@ def get_affine_3d(data_set_id) -> dict:
                 'section_thickness':  brain slice thickness in um (float)
 
     """
-
     query_string = query_string_builder('affine_3d', section_data_set_id=data_set_id)
     json_tree = send_query(query_string)
     align_info = json_tree['msg'][0]['alignment3d']
@@ -188,6 +189,8 @@ def get_affine_3d(data_set_id) -> dict:
 
 def get_affine_2d(image_id) -> dict:
     """
+    Get the coefficients for 2D affine transformation.
+
     get_affine_2d(section_data_set_id)
 
     Query the Allen API to obtain the values for the TVR transform. This
@@ -205,7 +208,6 @@ def get_affine_2d(image_id) -> dict:
                                   different slices
 
     """
-
     # send the query, extract the alignment information
     query_string = query_string_builder('affine_2d', section_image_id=image_id)
     json_tree = send_query(query_string)
@@ -221,8 +223,11 @@ def get_affine_2d(image_id) -> dict:
 
 
 def xy_to_pir(x_pix, y_pix, section_data_set_id, section_image_id) -> np.array:
-
     """
+    Convert from [X,Y] to [P,I,R] coordinates.
+
+    xy_to_pir(x_pix, y_pix, section_data_set_id, section_image_id)
+
     Implement 2D and 3D affine transformations to convert from
     "image" coordinates to section coordinates, and then to the
     Common Coordinate Framework units.
@@ -241,7 +246,6 @@ def xy_to_pir(x_pix, y_pix, section_data_set_id, section_image_id) -> np.array:
             common coordinate framework (CCF)
 
     """
-
     # implement the 2D affine transform for image_to_section coordinates
     t_2d = get_affine_2d(section_image_id)
     tmtx_tsv = np.hstack((t_2d['A_mtx'], t_2d['translation']))
@@ -266,7 +270,9 @@ def xy_to_pir(x_pix, y_pix, section_data_set_id, section_image_id) -> np.array:
 
 def retrieve_file_over_http(apistring, file_path) -> None:
     """
-    retrieve_file_over_http
+    Download and save an image from the Allen Institute.
+
+    retrieve_file_over_http(apistring, file_path)
 
     Retrieve a file from the Allen Database using HTTP and save
     the file to the local hard disk
@@ -283,7 +289,6 @@ def retrieve_file_over_http(apistring, file_path) -> None:
 
 
     """
-
     try:
         with open(file_path, 'wb') as f:
             response = urlreq.urlopen(apistring)
@@ -294,6 +299,8 @@ def retrieve_file_over_http(apistring, file_path) -> None:
 
 def get_all_section_image_ids(section_data_set_id) -> list:
     """
+    Retrieve all of the section image IDs for a section_dataset.
+
     get_all_section_image_ids(section_data_set_id)
 
     Retrieve all section_image IDs that are from a single brain
@@ -315,6 +322,8 @@ def get_all_section_image_ids(section_data_set_id) -> list:
 
 def save_all_section_images(data_set_id, data_directory) -> None:
     """
+    Save all section images from a single section_dataset (brain).
+
     save_all_section_images(data_set_id, data_directory)
 
     Downloads all images from a single brain and saves them to the local
@@ -326,7 +335,6 @@ def save_all_section_images(data_set_id, data_directory) -> None:
                         The full path to the directory where the images will
                         be saved
     """
-
     # store the starting directory
     starting_dir = os.getcwd()
 
@@ -336,7 +344,6 @@ def save_all_section_images(data_set_id, data_directory) -> None:
     if new_dir_name not in os.listdir('.'):
         os.mkdir(new_dir_name)
     os.chdir(new_dir_name)
-    data_dir = os.getcwd()
 
     # query the Allen API to obtain the section_image IDs that correspond with this dataset
     section_image_ids = get_all_section_image_ids(data_set_id)
@@ -360,6 +367,8 @@ def save_all_section_images(data_set_id, data_directory) -> None:
 
 def save_section_image(section_image_id, img_file_name=None) -> None:
     """
+    Save a single section_image.
+
     save_section_image(section_image_id, img_file_name)
 
     Saves an image to the local hard disk
@@ -381,6 +390,8 @@ def save_section_image(section_image_id, img_file_name=None) -> None:
 
 def get_section_image(section_image_id) -> np.array:
     """
+    Download a section image (without saving to disk).
+
     get_section_image(section_image_id)
 
     Download an image from the Allen Institute for local processing
