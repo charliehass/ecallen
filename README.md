@@ -86,7 +86,8 @@ ax = fig.add_subplot(1,1,1)
 ax.imshow(img)
 plt.show()
 
-![](https://efferencecopy.net/wp-content/uploads/2016/12/example_section_image.png)
+![](https://github.com/efferencecopy/ecallen/blob/master/resources/example_brain_img.png "example brain image")
+
 
 ```
 
