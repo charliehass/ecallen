@@ -75,8 +75,18 @@ params
 """ Use ecallen.image to download a single image """
 
 # save a single section image
-section_image_id = 531477737
+section_image_id = 531477777
 ecimg.save_section_image(section_image_id, 'sample_image.jpg')
+
+# load the saved file and plot
+from skimage.io import imread
+img = imread('sample_image.jpg')
+fig = plt.figure()
+ax = fig.add_subplot(1,1,1)
+ax.imshow(img)
+plt.show()
+
+![](https://efferencecopy.net/wp-content/uploads/2016/12/example_section_image.png)
 
 ```
 
