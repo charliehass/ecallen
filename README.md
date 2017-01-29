@@ -1,7 +1,7 @@
 # ecallen
 Python package for easy interaction with the Allen Institute for Brain Science. Includes routines to download images and provides fast 3D registration to the Common Coordinate Framework.
 
-Please visit [efferencecopy.net](https://efferencecopy.net/allen-brain-atlas-interfacing-with-the-allen-api/) for a full explanation of the package's functionality including detailed examples.
+Please visit [efferencecopy.net](https://efferencecopy.net/ecallen-a-python-package-for-the-allen-institutes-api/) for a full explanation of the package's functionality including detailed examples.
 
 ## Table of Contents
 
