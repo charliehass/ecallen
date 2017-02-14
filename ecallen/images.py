@@ -320,7 +320,7 @@ def get_all_section_image_ids(section_data_set_id) -> list:
     return [x['id'] for x in json_tree['msg']]
 
 
-def save_all_section_images(data_set_id, data_directory) -> None:
+def save_all_section_images(data_set_id, data_directory=None) -> None:
     """
     Save all section images from a single section_dataset (brain).
 
@@ -335,11 +335,16 @@ def save_all_section_images(data_set_id, data_directory) -> None:
                         The full path to the directory where the images will
                         be saved
     """
+    # TODO make test case for downloading all images of well known dataset
+
     # store the starting directory
     starting_dir = os.getcwd()
 
     # cd to the data directory. If a sub-directory for this dataset does not exist, make one
-    os.chdir(data_directory)
+    if data_directory is not None:
+        data_directory = os.path.expanduser(data_directory)  # tilde expansion
+        os.chdir(data_directory)
+
     new_dir_name = str(data_set_id) + '_raw_images'
     if new_dir_name not in os.listdir('.'):
         os.mkdir(new_dir_name)
