@@ -25,7 +25,10 @@ import urllib.request as urlreq
 import urllib.error as urlerr
 from PIL import Image
 import io
-
+import skimage.io as skio
+from skimage.measure import label, regionprops
+from skimage.filters import threshold_otsu
+from skimage import dtype_limits
 
 def send_query(query_string) -> dict:
     """
@@ -53,7 +56,8 @@ def send_query(query_string) -> dict:
         else:
             exception_string = 'did not complete api query successfully'
     else:
-        exception_string = 'API failure. Allen says: {}'.format(response.reason)
+        exception_string = 'API failure. Allen says: {}'.format(
+            response.reason)
 
     # raise an exception if the API request failed
     raise ValueError(exception_string)
@@ -91,23 +95,43 @@ def query_string_builder(query_type, **kwargs) -> str:
     """
     # TODO: convert this constrcut to a dictionary, or build class "query_type"
     if query_type.lower() == "section_dataset_info":
-        query_string = '/data/query.json?criteria=model::SectionDataSet,rma::criteria,[id$eq{}],' \
-                       'rma::include,genes,plane_of_section,probes,products,reference_space,specimen,treatments'.format(kwargs['section_data_set_id'])
+        query_string = ('/data/query.json?criteria='
+                        'model::SectionDataSet'
+                        ',rma::criteria,[id$eq{}]'
+                        ',rma::include,genes,plane_of_section,probes'
+                        ',products,reference_space,specimen,treatments'
+                        )
+        query_string = query_string.format(kwargs['section_data_set_id'])
 
     elif query_type.lower() == "section_image_ids":
-        query_string = '/data/query.json?criteria=model::SectionImage,rma::criteria,[data_set_id$eq{}]'.format(kwargs['section_data_set_id'])
+        query_string = ('/data/query.json?criteria='
+                        'model::SectionImage'
+                        ',rma::criteria,[data_set_id$eq{}]'
+                        )
+        query_string = query_string.format(kwargs['section_data_set_id'])
 
     elif query_type.lower() == "section_image_download":
-        query_string = '/section_image_download/{}'.format(kwargs['section_image_id'])
+        query_string = '/section_image_download/{}'
+        query_string = query_string.format(kwargs['section_image_id'])
 
     elif query_type.lower() == "affine_3d":
-        query_string = '/data/query.json?criteria=model::SectionDataSet,rma::criteria,[id$eq{}],rma::include,alignment3d'.format(kwargs['section_data_set_id'])
+        query_string = ('/data/query.json?criteria='
+                        'model::SectionDataSet'
+                        ',rma::criteria,[id$eq{}],rma::include,alignment3d'
+                        )
+        query_string = query_string.format(kwargs['section_data_set_id'])
 
     elif query_type.lower() == "affine_2d":
-        query_string = '/data/query.json?criteria=model::SectionImage,rma::criteria,[id$eq{}],rma::include,alignment2d'.format(kwargs['section_image_id'])
+        query_string = ('/data/query.json?criteria='
+                        'model::SectionImage'
+                        ',rma::criteria,[id$eq{}],rma::include,alignment2d')
+        query_string = query_string.format(kwargs['section_image_id'])
 
     elif query_type.lower() == "xy_to_pir_slow":
-        query_string = '/image_to_reference/{}.json?x={}&y={}'.format(kwargs['section_image_id'], kwargs['x_pix'], kwargs['y_pix'])
+        query_string = '/image_to_reference/{}.json?x={}&y={}'
+        query_string = query_string.format(kwargs['section_image_id'],
+                                           kwargs['x_pix'],
+                                           kwargs['y_pix'])
 
     else:
         query_string = ''
@@ -136,7 +160,8 @@ def get_imaging_params(data_set_id) -> dict:
 
     """
     # send the request
-    query_string = query_string_builder("section_dataset_info", section_data_set_id=data_set_id)
+    query_string = query_string_builder("section_dataset_info",
+                                        section_data_set_id=data_set_id)
     json = send_query(query_string)
 
     # define the image params
@@ -147,6 +172,7 @@ def get_imaging_params(data_set_id) -> dict:
         'blue_channel': json['msg'][0]['blue_channel'],
         'is_FISH': json['msg'][0]['treatments'][0]['name'].lower() == 'fish',
         'is_ISH': json['msg'][0]['treatments'][0]['name'].lower() == 'ish',
+        'probes': [dct['acronym'].lower() for dct in json['msg'][0]['genes']],
         'section_thickness': json['msg'][0]['section_thickness'],
         'genotype': json['msg'][0]['specimen']['name']
     }
@@ -174,13 +200,14 @@ def get_affine_3d(data_set_id) -> dict:
                 'section_thickness':  brain slice thickness in um (float)
 
     """
-    query_string = query_string_builder('affine_3d', section_data_set_id=data_set_id)
+    query_string = query_string_builder('affine_3d',
+                                        section_data_set_id=data_set_id)
     json_tree = send_query(query_string)
     align_info = json_tree['msg'][0]['alignment3d']
     coeffs = [align_info['tvr_{:0>2}'.format(x)] for x in range(12)]
 
     # construct the output dictionary
-    affine3 = {'A_mtx': np.array(coeffs[0:9]).reshape((3, 3)),  # not in Fortran (Matlab) order
+    affine3 = {'A_mtx': np.array(coeffs[0:9]).reshape((3, 3)),
                'translation': np.array(coeffs[9:]).reshape((3, 1)),
                'section_thickness': json_tree['msg'][0]['section_thickness']}
 
@@ -215,7 +242,7 @@ def get_affine_2d(image_id) -> dict:
     coeffs = [align_info['tsv_{:0>2}'.format(x)] for x in range(6)]
 
     # construct the output dictionary
-    affine2 = {'A_mtx': np.array(coeffs[0:4]).reshape((2, 2)),  # not in Fortran (Matlab) order
+    affine2 = {'A_mtx': np.array(coeffs[0:4]).reshape((2, 2)),
                'translation': np.array(coeffs[4:]).reshape((2, 1)),
                'section_number': json_tree['msg'][0]['section_number']}
 
@@ -243,20 +270,20 @@ def xy_to_pir(x_pix, y_pix, section_data_set_id, section_image_id) -> np.array:
     Returns:
         pir: numpy.array
             [Posterior, Inferior, Right] of the corresponding location in the
-            common coordinate framework (CCF)
+            common coordinate framework (CCF) in units of micrometers
 
     """
     # implement the 2D affine transform for image_to_section coordinates
     t_2d = get_affine_2d(section_image_id)
     tmtx_tsv = np.hstack((t_2d['A_mtx'], t_2d['translation']))
-    tmtx_tsv = np.vstack((tmtx_tsv, np.zeros(3)))  # transformation matrix for 2D affine
-    data_mtx = np.vstack((x_pix, y_pix, np.ones_like(x_pix)))  # needs to be [3 x Npix]
+    tmtx_tsv = np.vstack((tmtx_tsv, [0,0,1]))  # T matrix for 2D affine
+    data_mtx = np.vstack((x_pix, y_pix, np.ones_like(x_pix)))  # [3 x Npix]
     xy_2d_align = np.dot(tmtx_tsv, data_mtx)
 
     # implement the 3D affine transform for section_to_CCF coordinates
     t_3d = get_affine_3d(section_data_set_id)
     tmtx_tvr = np.hstack((t_3d['A_mtx'], t_3d['translation']))
-    tmtx_tvr = np.vstack((tmtx_tvr, np.ones(4)))
+    tmtx_tvr = np.vstack((tmtx_tvr, [0,0,0,1]))
 
     data_mtx = np.vstack((xy_2d_align[0, :],
                          xy_2d_align[1, :],
@@ -264,7 +291,7 @@ def xy_to_pir(x_pix, y_pix, section_data_set_id, section_image_id) -> np.array:
                          np.ones((1, xy_2d_align.shape[1]))))
 
     xyz_3d_align = np.dot(tmtx_tvr, data_mtx)
-    pir = xyz_3d_align[0:3, :]  # return arg has all P in 1st row, all I in 2nd row, etc..
+    pir = xyz_3d_align[0:3, :]
     return pir
 
 
@@ -282,7 +309,8 @@ def retrieve_file_over_http(apistring, file_path) -> None:
         file_path: string
              Absolute path including the file name to save.
 
-    This file was copied (almost) verbatim from the Allen API SDK and was accessed at the following URL:
+    This file was copied (almost) verbatim from the Allen API SDK
+    and was accessed at the following URL:
     https://alleninstitute.github.io/AllenSDK/_modules/allensdk/api/api.html#Api.retrieve_file_over_http
 
     I modified the usage of urllib2 into urllib (for python 3+)
@@ -297,25 +325,27 @@ def retrieve_file_over_http(apistring, file_path) -> None:
         print("Couldn't retrieve file from\n  %s" % apistring)
 
 
-def get_all_section_image_ids(section_data_set_id) -> list:
+def get_all_section_image_ids(data_set_id) -> list:
     """
     Retrieve all of the section image IDs for a section_dataset.
 
-    get_all_section_image_ids(section_data_set_id)
+    get_all_section_image_ids(data_set_id)
 
     Retrieve all section_image IDs that are from a single brain
     (section_data_set) by querying the Allen API
 
     Args:
-        section_data_set_id: int
+        data_set_id: (int) The ID for an ABI section_data_set
 
     Returns:
-        list of image IDs
+        list of section_image IDs
 
     """
-    # TODO: add assert that section_data_set_id is really a section_dataset
-    # query the Allen API to obtain the section_image IDs that correspond with this data set
-    query_string = query_string_builder('section_image_ids', section_data_set_id=section_data_set_id)
+
+    # query the Allen API to obtain the section_image IDs
+    # that correspond with this data set
+    query_string = query_string_builder('section_image_ids',
+                                        section_data_set_id=data_set_id)
     json_tree = send_query(query_string)
     return [x['id'] for x in json_tree['msg']]
 
@@ -340,7 +370,8 @@ def save_all_section_images(data_set_id, data_directory=None) -> None:
     # store the starting directory
     starting_dir = os.getcwd()
 
-    # cd to the data directory. If a sub-directory for this dataset does not exist, make one
+    # cd to the data directory.
+    # If a sub-directory for this dataset does not exist, make one
     if data_directory is not None:
         data_directory = os.path.expanduser(data_directory)  # tilde expansion
         os.chdir(data_directory)
@@ -350,7 +381,8 @@ def save_all_section_images(data_set_id, data_directory=None) -> None:
         os.mkdir(new_dir_name)
     os.chdir(new_dir_name)
 
-    # query the Allen API to obtain the section_image IDs that correspond with this dataset
+    # query the Allen API to obtain the section_image IDs
+    # that correspond with this dataset
     section_image_ids = get_all_section_image_ids(data_set_id)
 
     # download any images that do not currently exist in the local database
@@ -387,7 +419,8 @@ def save_section_image(section_image_id, img_file_name=None) -> None:
     if img_file_name is None:
         img_file_name = 'section_image_' + section_image_id
 
-    apistring = query_string_builder("section_image_download", section_image_id=section_image_id)
+    apistring = query_string_builder("section_image_download",
+                                     section_image_id=section_image_id)
     fpath = os.path.join(os.getcwd(), img_file_name)
     retrieve_file_over_http(apistring, fpath)
     return None
@@ -409,9 +442,83 @@ def get_section_image(section_image_id) -> np.array:
         img: np.array
 
     """
-    apistring = query_string_builder("section_image_download", section_image_id=section_image_id)
+    apistring = query_string_builder("section_image_download",
+                                     section_image_id=section_image_id)
     response = requests.get(apistring)
     response.raise_for_status()
     with io.BytesIO(response.content) as f:
         with Image.open(f) as img:
             return np.array(img)
+
+
+
+
+def extract_region_props(img_path,
+                         section_dataset_id,
+                         probes,
+                         ish_minval=70
+                         ) ->list:
+    """Segment neuron cell bodies via thresholding.
+
+    Accepts images from the Allen Brain Institute (ISH or FISH) and segments
+    fluorescently labeled neuron cell bodies. Segmentation is accomplished by
+    computing a label matrix on the thresholded image (via Otsu's method).
+
+    Args:
+        img_path (str): full path to the image.
+        section_dataset_id (int): The experiment ID specified by the
+            Allen Brain Institute.
+        probes (list): list of strings, specifying the RNA target of the
+            ISH or FISH stain
+        ish_minval (int): applies to ISH images only. Any value below
+            this will be ignored by the thresholding algorithm.
+            Default value is 70.
+
+    Returns:
+        rprops (list): each element is a dictionary of region properties
+            as defined by scikit-image's regionprops function
+    """
+    # get the section dataset imaging params
+    params = ecimg.get_imaging_params(section_dataset_id)
+
+    # user must specify probe(s) (i.e., color channels) to analyze
+    # if only one probe is specified, turn it into a list
+    if type(probes) != list and type(probes) == str:
+        probes = [probes]
+
+    probe_ch = [
+        params['red_channel'].lower() in probes,
+        params['green_channel'].lower() in probes,
+        params['blue_channel'].lower() in probes,
+    ]
+
+    # open the image
+    img = skio.imread(img_path)
+
+    if params['is_FISH']:
+        n_ch_correct = sum(probe_ch) > 0 and sum(probe_ch) <= 3
+        assert n_ch_correct, "Did not identify the correct number of channels"
+        img = np.array(img[:, :, probe_ch]).max(axis=2)  # max project
+
+        # measure threshold
+        thresh = threshold_otsu(img, nbins=256)
+
+    elif params['is_ISH']:
+        img = dtype_limits(img)[1] - img  # invert
+        assert sum(probe_ch) == 3, "Not all ISH color channels identical"
+        img = np.max(img, axis=2)  # max project inverted image
+
+        # measure threshold
+        thresh = threshold_otsu(img[img > ish_minval], nbins=256)
+
+    else:
+        raise ValueError('Image is neither FISH nor ISH')
+
+    # apply the threshold to the image, which is now just a 2D matrix
+    bw = img > thresh
+
+    # label image regions with an integer. Each region gets a unique integer
+    label_image = label(bw)
+    rprops = regionprops(label_image)
+
+    return rprops
