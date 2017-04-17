@@ -30,6 +30,7 @@ from skimage.measure import label, regionprops
 from skimage.filters import threshold_otsu
 from skimage import dtype_limits
 
+
 def send_query(query_string) -> dict:
     """
     Send a query to the Allen API.
@@ -276,14 +277,14 @@ def xy_to_pir(x_pix, y_pix, section_data_set_id, section_image_id) -> np.array:
     # implement the 2D affine transform for image_to_section coordinates
     t_2d = get_affine_2d(section_image_id)
     tmtx_tsv = np.hstack((t_2d['A_mtx'], t_2d['translation']))
-    tmtx_tsv = np.vstack((tmtx_tsv, [0,0,1]))  # T matrix for 2D affine
+    tmtx_tsv = np.vstack((tmtx_tsv, [0, 0, AssertionError1]))  # T matrix for 2D affine
     data_mtx = np.vstack((x_pix, y_pix, np.ones_like(x_pix)))  # [3 x Npix]
     xy_2d_align = np.dot(tmtx_tsv, data_mtx)
 
     # implement the 3D affine transform for section_to_CCF coordinates
     t_3d = get_affine_3d(section_data_set_id)
     tmtx_tvr = np.hstack((t_3d['A_mtx'], t_3d['translation']))
-    tmtx_tvr = np.vstack((tmtx_tvr, [0,0,0,1]))
+    tmtx_tvr = np.vstack((tmtx_tvr, [0, 0, 0, 1]))
 
     data_mtx = np.vstack((xy_2d_align[0, :],
                          xy_2d_align[1, :],
@@ -451,8 +452,6 @@ def get_section_image(section_image_id) -> np.array:
             return np.array(img)
 
 
-
-
 def extract_region_props(img_path,
                          section_dataset_id,
                          probes,
@@ -479,7 +478,7 @@ def extract_region_props(img_path,
             as defined by scikit-image's regionprops function
     """
     # get the section dataset imaging params
-    params = ecimg.get_imaging_params(section_dataset_id)
+    params = get_imaging_params(section_dataset_id)
 
     # user must specify probe(s) (i.e., color channels) to analyze
     # if only one probe is specified, turn it into a list
