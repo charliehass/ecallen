@@ -1,7 +1,14 @@
 # ecallen
 Python package for retrieval and analysis of data from the Allen Institute for Brain Science. Includes routines to interact with the Allen's API, download images, basic image processing, and provides fast 3D registration to the Common Coordinate Framework. The essential features are illustrated in the figure below:
 
-![](https://i2.wp.com/efferencecopy.net/wp-content/uploads/2017/04/post_5_fig_5.jpg?w=1170&ssl=1)*__Figure 1: __ The steps in acquiring and analyzing data from the Allen Institute are shown above. The tools from ecallen necessary for each step are shown below.*
+<img
+    src="https://i2.wp.com/efferencecopy.net/wp-content/uploads/2017/04/post_5_fig_5.jpg?w=1170&ssl=1"
+    alt=""
+    style="width:500px;margin:0px auto;display:block;"
+/></br>
+<figurecaption>
+__Figure 1:__ The steps in acquiring and analyzing data from the Allen Institute are shown above. The tools from ecallen necessary for each step are shown below.
+</figurecaption></br></br>
 
 Please visit [efferencecopy.net](https://efferencecopy.net) for a full explanation of the package's functionality including detailed examples of:
 
@@ -11,15 +18,15 @@ Please visit [efferencecopy.net](https://efferencecopy.net) for a full explanati
 
 ## Table of Contents
 
-1. [Installation](## Installation)
-1. [Usage](##Usage)
-    1. [Retrieve image IDs](###Retrieve image IDs)
-    1. [Image Download](###Image Download)
-    1. [Image Metadata](###Retrieve image metadata)
-    1. [Neuron segmentation](###Neuron segmentation)
-    1. [3D (whole-brain) image registration](### Fast 3D registration)
-1. [Contributing](##Contributing)
-1. [License](##License)
+1. Installation
+1. Usage
+    1. Retrieve image IDs
+    1. Image Download
+    1. Image Metadata
+    1. Neuron segmentation
+    1. 3D (whole-brain) image registration
+1. Contributing
+1. License
 
 
 ## Installation
@@ -81,10 +88,10 @@ plt.show()
 <img
     src="https://i1.wp.com/efferencecopy.net/wp-content/uploads/2017/01/section_image_example.png?resize=768%2C576&ssl=1"
     alt=""
-    style="width:425px;margin:0px auto;display:block;"
-/>
+    style="width:300px;margin:0px auto;display:block;"
+/></br>
 <figurecaption>
-*__Figure 2:__ A raw image from the Allen Brain Atlas. image_ID=531477777.*
+__Figure 2:__ A raw image from the Allen Brain Atlas. image_ID=531477777.
 </figurecaption></br></br>
 
 ### Retrieve image metadata
@@ -141,10 +148,10 @@ cell_y_pix = np.array([roi['centroid'][0] for roi in rprops])
 <img
     src="https://i0.wp.com/efferencecopy.net/wp-content/uploads/2017/02/post_4_figure_9_full_fig.jpg?w=1170&ssl=1"
     alt=""
-    style="width:500px;margin:0px auto;display:block;"
-/>
+    style="width:400px;margin:0px auto;display:block;"
+/></br>
 <figurecaption>
-*__Figure 3:__ ecallen accomplishes automated segmentation of neuron cell bodies from ISH or FISH imaes. Left: Segmented neurons in the neocortex of a single brain image. Each colored spot is a single neuron. Right: a close up of segmented regions superimposed on the raw image.*
+__Figure 3:__ ecallen accomplishes automated segmentation of neuron cell bodies from ISH or FISH imaes. Left: Segmented neurons in the neocortex of a single brain image. Each colored spot is a single neuron. Right: a close up of segmented regions superimposed on the raw image.
 </figurecaption></br></br>
 
 ### Fast 3D registration
@@ -170,19 +177,19 @@ pir = ecimg.xy_to_pir(cell_x_pix,
 <img
     src="https://i0.wp.com/efferencecopy.net/wp-content/uploads/2017/04/post_5_fig_3_new_axis.jpg?w=1170&ssl=1"
     alt=""
-    style="width:700px;margin:0px auto;display:block;"
-/>
+    style="width:600px;margin:0px auto;display:block;"
+/></br>
 <figurecaption>
-*__Figure 4:__ ecallen can register the location of points in raw images to the corresponding points in the Common Coordinate Framework. Left: A single raw image with three points in X,Y space. Right: The corresponding points after registration to the Common Coordinate Framework.*
+__Figure 4:__ ecallen can register the location of points in raw images to the corresponding points in the Common Coordinate Framework. Left: A single raw image with three points in X,Y space. Right: The corresponding points after registration to the Common Coordinate Framework.
 </figurecaption></br></br>
 
 <img
     src="https://i1.wp.com/efferencecopy.net/wp-content/uploads/2017/04/post_5_cover_image_new.jpg?w=325&ssl=1"
     alt=""
     style="width:325px;margin:0px auto;display:block;"
-/>
+/></br>
 <figurecaption>
-*__Figure 5:__ ecallen provides fast image registration for large scale analyses. Here, roughly 124,000 neurons from 44 images have been registered to the common coordinate framework. Each dot is a single neuron and different colors indicate different raw images. In this case, raw images were coronal brain slices. ecallen's registration routines transform each neurons' location from X,Y space into real "brain space" coordinates. *
+__Figure 5:__ ecallen provides fast image registration for large scale analyses. Here, roughly 124,000 neurons from 44 images have been registered to the common coordinate framework. Each dot is a single neuron and different colors indicate different raw images. In this case, raw images were coronal brain slices. ecallen's registration routines transform each neurons' location from X,Y space into real "brain space" coordinates.
 </figurecaption></br></br>
 
 **[Back to top](#table-of-contents)**
