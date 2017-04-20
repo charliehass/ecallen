@@ -1,7 +1,7 @@
 # ecallen
 Python package for retrieval and analysis of data from the Allen Institute for Brain Science. Includes routines to interact with the Allen's API, download images, basic image processing, and provides fast 3D registration to the Common Coordinate Framework. The essential features are illustrated in the figure below:
 
-![](https://i2.wp.com/efferencecopy.net/wp-content/uploads/2017/04/post_5_fig_5.jpg?w=1170&ssl=1)*__Figure 1: __ Steps in acquiring and analyzing data from the Allen Institute (above) and the tools from ecallen neccessary for each step.*
+![](https://i2.wp.com/efferencecopy.net/wp-content/uploads/2017/04/post_5_fig_5.jpg?w=1170&ssl=1)*__Figure 1: __ The steps in acquiring and analyzing data from the Allen Institute are shown above. The tools from ecallen necessary for each step are shown below.*
 
 Please visit [efferencecopy.net](https://efferencecopy.net) for a full explanation of the package's functionality including detailed examples of:
 
@@ -42,7 +42,7 @@ from ecallen import images as ecimg
 
 ```Python
 
-""" Use ecallen to retrieve all image_id for an experiment """
+""" Use ecallen to retrieve all image_ids for an experiment """
 
 from ecallen import images as ecimg
 
@@ -51,7 +51,7 @@ all_image_ids = ecimg.get_all_section_image_ids(section_data_set_id)
 
 print("Section Image IDs: ", all_image_ids)
 
-Section Image IDs:  [531477716, 531477704, 531477708, 531477806, 531477718, 531477765, 531477843, 531477755, 531477787, 531477853, 531477789, 531477733, 531477739, 531477800, 531477841, 531477702, 531477722, 531477767, 531477796, 531477804, 531477798, 531477829, 531477743, 531477714, 531477712, 531477735, 531477779, 531477818, 531477763, 531477855, 531477825, 531477785, 531477759, 531477794, 531477737, 531477845, 531477808, 531477832, 531477706, 531477747, 531477729, 531477810, 531477835, 531477749, 531477777, 531477816, 531477757, 531477727, 531477745, 531477849]
+Section Image IDs:  [531477716, 531477704, 531477708, 531477806, 531477718, 531477765, 531477843, 531477755, 531477787, 531477853, 531477789, 531477733, 531477739]
 
 ```
 
@@ -126,7 +126,7 @@ section_dataset_id = 167643437
 # grab the RNA probes from the imaging parameters
 img_params = ecimg.get_imaging_params(section_dataset_id)
 
-# run the segementation function
+# run the segmentation function
 rprops = ecimg.extract_region_props(img_path,
                                     section_dataset_id,
                                     img_params['probes'],
@@ -149,7 +149,7 @@ cell_y_pix = np.array([roi['centroid'][0] for roi in rprops])
 
 ### Fast 3D registration
 
-`ecallen` registration routines transform each neurons' location from X,Y space into real "brain space" coordinates.`ecallen` accomplishes fast image registration by implementing affine transformations locally instead of relying on point-by-point registration via the Allen's API. Thus, thousands of points can be registered in seconds, enabling large scale analyses.
+`ecallen` registration routines transform each neurons' location from X,Y space into real "brain space" coordinates. `ecallen` accomplishes fast image registration by implementing affine transformations locally instead of relying on point-by-point registration via the Allen's API. Thus, thousands of points can be registered in seconds, enabling large scale analyses.
 
 ```Python
 """ Fast 3D registration with ecallen.images """

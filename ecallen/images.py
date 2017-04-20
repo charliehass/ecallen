@@ -277,7 +277,7 @@ def xy_to_pir(x_pix, y_pix, section_data_set_id, section_image_id) -> np.array:
     # implement the 2D affine transform for image_to_section coordinates
     t_2d = get_affine_2d(section_image_id)
     tmtx_tsv = np.hstack((t_2d['A_mtx'], t_2d['translation']))
-    tmtx_tsv = np.vstack((tmtx_tsv, [0, 0, AssertionError1]))  # T matrix for 2D affine
+    tmtx_tsv = np.vstack((tmtx_tsv, [0, 0, 1]))  # T matrix for 2D affine
     data_mtx = np.vstack((x_pix, y_pix, np.ones_like(x_pix)))  # [3 x Npix]
     xy_2d_align = np.dot(tmtx_tsv, data_mtx)
 
